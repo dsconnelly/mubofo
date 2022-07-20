@@ -8,3 +8,5 @@ Some gradient boosting libraries support multioutput problems by training one-di
 
 mubofo solves this problem by returning to the "train on the residuals" perspective of boosting. The main class is `BoostedForestRegressor`, which implements the [scikit-learn estimator API](https://scikit-learn.org/stable/developers/develop.html). While implemented entirely in Python, `BoostedForestRegressor` is fast enough for practical use because the individual trees in the forest are [`sklearn.tree.DecisionTreeRegressor`](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html) instances, and so
 most model fitting is handled by the C backend.
+
+mubofo can be installed with `pip install mubofo`.
