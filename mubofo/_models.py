@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from sklearn.base import BaseEstimator, RegressorMixin
@@ -163,7 +165,7 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
                     stop = True
 
             if self.verbose:
-                print(message)
+                logging.info(message)
 
             if stop:
                 break
