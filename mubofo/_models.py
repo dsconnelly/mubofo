@@ -12,6 +12,7 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         self,
         n_estimators=100,
         learning_rate=0.2,
+        square_weights=False,
         max_samples=None,
         max_depth=5,
         max_features=None,
@@ -31,6 +32,9 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
             fitting, n_estimators is the maximum number of trees.
         learning_rate : float
             The weight multiplying the output of each tree in the forest.
+        square_weights : bool
+            Whether the errors used as weights to select bootstrapped subsamples
+            of the training data should be squared.
         max_samples : None or int or float
             The size of each bootstrapped subsample of the dataset. If None,
             then each subsample will have n_samples rows. If an int, each
@@ -68,6 +72,7 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
 
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
+        self.square_weights = square_weights
         self.max_samples = max_samples
 
         self.max_depth = max_depth
@@ -128,7 +133,7 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
 
         estimators, stop = [], False
         for i in range(1, self.n_estimators + 1):
-            weights = get_error(y, current)
+            weights = get_error(y, current, squared=self.square_weights)
             weights = weights / weights.sum()
             idx = random_state.choice(n_samples, size=n_bootstrap, p=weights)
 
