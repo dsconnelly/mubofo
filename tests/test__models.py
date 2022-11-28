@@ -11,7 +11,7 @@ def test_learns_well():
     X, Y = make_regression(n_samples=10000, n_features=40, n_targets=20)
     Y = (Y - Y.mean(axis=0)) / Y.std(axis=0)
 
-    model = BoostedForestRegressor(val_size=0.2).fit(X, Y)
+    model = BoostedForestRegressor(max_depth=2).fit(X, Y)
     score = r2_score(Y, model.predict(X))
 
     assert score > 0.9

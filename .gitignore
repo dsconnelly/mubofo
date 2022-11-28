@@ -1,4 +1,6 @@
-data/*
-dist/*
-examples/*
+c-version
+data
+dist
+examples
 *.pyc
+.vscode
