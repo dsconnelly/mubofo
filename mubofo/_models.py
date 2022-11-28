@@ -1,3 +1,5 @@
+import logging
+
 from __future__ import annotations
 from typing import Any, Optional
 
@@ -111,7 +113,7 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
             current += self.learning_rate * estimator.predict(X)
 
             if self.verbose:
-                print(f'Fit estimator {i}.')
+                logging.info(f'Fit estimator {i}.')
 
         self.estimators_ = estimators
         self.n_features_in_ = n_features
