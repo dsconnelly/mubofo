@@ -6,6 +6,7 @@ from typing import Any, Optional
 
 import numpy as np
 
+from sklearn import config_context
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
@@ -118,6 +119,7 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
 
         self.estimators_ = estimators
         self.n_features_in_ = n_features
+        self.n_targets_out_ = 1 if Y.ndim == 1 else Y.shape[1]
 
         return self
 
@@ -138,12 +140,10 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         """
 
         check_is_fitted(self)
-        X = check_array(X)
+        X = check_array(X, dtype=np.float32)        
+        output = sum(e.predict(X, check_input=False) for e in self.estimators_)
 
-        output = sum(estimator.predict(X) for estimator in self.estimators_)
-        output = self.learning_rate * output
-
-        return output
+        return self.learning_rate * output
 
     def _more_tags(self) -> dict[str, Any]:
         return {'multioutput' : True}

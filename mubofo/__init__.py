@@ -1,6 +1,6 @@
 """Boosted forest regression with native support for multioutput problems."""
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 from ._models import BoostedForestRegressor
 
