@@ -6,8 +6,8 @@ from typing import Any, Optional
 
 import numpy as np
 
-from sklearn import config_context
 from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 
@@ -21,6 +21,9 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         max_depth: Optional[int] = None,
         max_samples: Optional[int | float] = None,
         max_features: Optional[int | float] = None,
+        val_size: Optional[int | float] = None,
+        max_patience: Optional[int] = None,
+        threshold: float = 0,
         random_state: Optional[int | np.random.RandomState] = None,
         verbose: bool = False
     ) -> None:
@@ -30,7 +33,8 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         Parameters
         ----------
         n_estimators : int
-            Number of trees in the forest.
+            Number of trees in the forest. If val_size is not None, n_estimators
+            is the maximum number of trees that might be trained.
         learning_rate : float
             Weight multiplying the output of each tree.
         max_depth : int or None 
@@ -44,6 +48,22 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         max_features : int or float or None
             Number of features to consider when looking for the best split. See
             the documentation for DecisionTreeRegressor for more details.
+        val_size : int or float or None
+            If None, no early stopping occurs. If an int or a float, will be
+            passed as the test_size argument to train_test_split to use a
+            subset of the training data as a validation set and stop training
+            early when the validation error has not decreased by at least
+            threshold in max_patience iterations.
+        max_patience : int or None
+            Number of boosting iterations to wait for the validation score to
+            decrease by threshold before stopping early. If max_patience is None
+            but val_size is not None, max_patience will be set to one-tenth the
+            total number of estimators to be trained.
+        threshold : float
+            Decrement by which the validation error must fall in max_patience
+            iterations to prevent early stopping. The validation error is the
+            RMS error of the model predictions, averaged over all outputs if
+            there are multiple.
         random_state : int or np.random.RandomState or None
             Random state to use for subsampling and to pass to each tree. If
             None, a RandomState is created with an unpredictable seed from the
@@ -59,6 +79,10 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         self.max_depth = max_depth
         self.max_samples = max_samples
         self.max_features = max_features
+
+        self.val_size = val_size
+        self.max_patience = max_patience
+        self.threshold = threshold
 
         self.random_state = random_state
         self.verbose = verbose
@@ -89,6 +113,14 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         if random_state is None or isinstance(random_state, int):
             random_state = np.random.RandomState(random_state)
 
+        validate = self.val_size is not None
+        if validate:
+            X, X_va, Y, Y_va = train_test_split(
+                X, Y,
+                test_size=self.val_size,
+                random_state=random_state
+            )
+
         n_samples, n_features = X.shape
         max_samples = self.max_samples
 
@@ -100,9 +132,17 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
         current = np.zeros(Y.shape)
         estimators: list[DecisionTreeRegressor] = []
 
+        if validate:
+            current_va = np.zeros(Y_va.shape)
+            best_error = np.sqrt((Y_va ** 2).mean())
+
+            patience, max_patience = 0, self.max_patience    
+            if max_patience is None:
+                max_patience = max(round(0.1 * self.n_estimators), 1)
+
         for i in range(1, self.n_estimators + 1):
-            errors = ((Y - current) ** 2).reshape(n_samples, -1).mean(axis=1)
-            weights = errors / errors.sum()
+            weights = ((Y - current) ** 2).reshape(n_samples, -1).mean(axis=1)
+            weights = weights / weights.sum()
             idx = random_state.choice(n_samples, size=max_samples, p=weights)
 
             estimator = DecisionTreeRegressor(
@@ -113,13 +153,31 @@ class BoostedForestRegressor(BaseEstimator, RegressorMixin):
 
             estimators.append(estimator)
             current += self.learning_rate * estimator.predict(X)
+            message = f'fit estimator {i}'
+
+            if validate:
+                current_va += self.learning_rate * estimator.predict(X_va)
+                error = np.sqrt(((Y_va - current_va) ** 2).mean())
+                message += f' -- validation error is {error:.3f}'
+
+                if error < best_error - self.threshold:
+                    best_error = error
+                    patience = 0
+                else:
+                    patience = patience + 1
+
+                if patience == max_patience:
+                    estimators = estimators[:-max_patience]
+                    message += '\nTerminating early due to lack of improvement'
 
             if self.verbose:
-                logging.info(f'Fit estimator {i}.')
+                logging.info(message)
+
+            if len(estimators) < i:
+                break
 
         self.estimators_ = estimators
         self.n_features_in_ = n_features
-        self.n_targets_out_ = 1 if Y.ndim == 1 else Y.shape[1]
 
         return self
 
