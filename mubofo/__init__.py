@@ -1,7 +1,12 @@
 """Boosted forest regression with native support for multioutput problems."""
 
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 
-from ._models import BoostedForestRegressor
+from ._forests import MultioutputBoostedForest, MultioutputRandomForest
+from ._trees import MultioutputDecisionTree
 
-__all__ = ['BoostedForestRegressor']
+__all__ = [
+    'MultioutputBoostedForest', 
+    'MultioutputDecisionTree',
+    'MultioutputRandomForest'
+]
