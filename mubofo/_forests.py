@@ -30,7 +30,10 @@ class MultioutputForestMixin:
         for i, estimator in enumerate(self.estimators_):
             importances += weights[i] * estimator.feature_importances_
 
-        return importances / weights.sum(axis=0)
+        sums = weights.sum(axis=0)
+        importances[:, sums != 0] /= sums[sums != 0]
+
+        return importances
 
     def _more_tags(self) -> dict[str, Any]:
         """Specify that the forest supports multioutput problems."""
