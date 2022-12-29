@@ -41,13 +41,14 @@ class MultioutputDecisionTree(DecisionTreeRegressor):
         X, y = check_X_y(X, y, multi_output=True, y_numeric=True)
         tree = super().fit(X, y, sample_weight, check_input=False).tree_
         
-        paths = self.decision_path(X).toarray().astype(bool)
-        n_samples = paths.sum(axis=0)
+        paths = self.decision_path(X).tocsc().astype(bool)
+        n_samples = paths.sum(axis=0).getA1()
         n_nodes = len(n_samples)
 
         impurities = np.zeros((n_nodes, self.n_outputs_))
         for node in range(n_nodes):
-            impurities[node] = y[paths[:, node]].var(axis=0)
+            idx = np.squeeze(paths[:, node].toarray())
+            impurities[node] = y[idx].var(axis=0)
 
         importances = np.zeros((X.shape[1], self.n_outputs_))
         for node in range(n_nodes):
