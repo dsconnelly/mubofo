@@ -6,6 +6,14 @@ from sklearn.utils.estimator_checks import check_estimator
 
 from mubofo import MultioutputDecisionTree
 
+def test_feature_importances__sign():
+    X, Y = make_regression(n_samples=1000, n_features=40, n_targets=10)
+    Y = (Y - Y.mean(axis=0)) / Y.std(axis=0)
+
+    model = MultioutputDecisionTree(max_depth=5).fit(X, Y)
+
+    assert np.all(model.feature_importances_ >= 0)
+
 def test_is_estimator():
     check_estimator(MultioutputDecisionTree())
 

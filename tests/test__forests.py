@@ -41,6 +41,16 @@ def test_feature_importances__shape():
     assert random.feature_importances_.shape == (40, 10)
     assert boosted.feature_importances_.shape == (40, 10)
 
+def test_feature_importances__sign():
+    X, Y = make_regression(n_samples=150, n_features=40, n_targets=10)
+    Y = (Y - Y.mean(axis=0)) / Y.std(axis=0)
+
+    random = MultioutputRandomForest(max_depth=3).fit(X, Y)
+    boosted = MultioutputBoostedForest(max_depth=3).fit(X, Y)
+
+    assert np.all(random.feature_importances_ >= 0)
+    assert np.all(boosted.feature_importances_ >= 0)
+
 def test_feature_importances__sum():
     X, Y = make_regression(n_samples=150, n_features=40, n_targets=10)
     Y = (Y - Y.mean(axis=0)) / Y.std(axis=0)

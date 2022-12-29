@@ -63,10 +63,10 @@ class MultioutputDecisionTree(DecisionTreeRegressor):
             gain -= n_samples[right] * impurities[right]
 
             feature = tree.feature[node]
-            importances[feature] += np.maximum(0, gain)
+            importances[feature] += gain
 
         leaves = tree.children_left == tree.children_right
-        outputs = tree.value[leaves, :, 0].T
+        outputs = abs(tree.value[leaves, :, 0].T)
         n_samples = n_samples[leaves]
 
         sums = importances.sum(axis=0)
