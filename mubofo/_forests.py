@@ -22,7 +22,16 @@ class MultioutputForestMixin:
 
     @property
     def feature_importances_(self) -> np.ndarray:
-        """Calculate feature importances weighted by tree absolute means."""
+        """
+        Calculate feature importances weighted by tree absolute means.
+        
+        Returns
+        -------
+        importances : Per-output feature importances for the whole forest. If
+            `self.n_outputs_ > 1`, the first axis indexes over input features
+            and the second over outputs.
+
+        """
 
         importances = np.zeros((self.n_features_in_, self.n_outputs_))
         weights = np.array([e.abs_means_ for e in self.estimators_])
@@ -55,34 +64,30 @@ class MultioutputBoostedForest(MultioutputForestMixin, ForestRegressor):
         threshold: float=0,
         random_state: Optional[int | RandomState]=None,
         verbose: bool=False
-    ):
+    ) -> None:
         """
-        Initialize a MultioutputBoostedForest and set parameters.
+        Initialize a `MultioutputBoostedForest` and set parameters.
         
         Parameters
         ----------
-        learning_rate : float
-            Weight multiplying the output of each tree.
-        val_size : int or float or None
-            If None, no early stopping occurs. If an int or a float, will be
-            passed as the test_size argument to train_test_split to use a
-            subset of the training data as a validation set and stop training
-            early when the validation error has not decreased by at least
-            threshold in max_patience iterations.
-        max_patience : int or None
-            Number of boosting iterations to wait for the validation score to
-            decrease by threshold before stopping early. If max_patience is None
-            but val_size is not None, max_patience will be set to one-tenth the
-            total number of estimators to be trained.
-        threshold : float
-            Decrement by which the validation error must fall in max_patience
-            iterations to prevent early stopping. The validation error is the
-            RMS error of the model predictions, averaged over all outputs if
-            there are multiple.
-        verbose : bool
-            Whether to print progress reports during fitting.
+        learning_rate : Weight multiplying the output of each tree.
+        val_size : If `None`, no early stopping occurs. If an int or a float,
+            will be passed as the `test_size` argument to `train_test_split` to
+            use a subset of the training data as a validation set and stop
+            training early when the validation error has not decreased by at
+            least `threshold` in `max_patience` iterations.
+        max_patience : Number of boosting iterations to wait for the validation
+            score to decrease by `threshold` before stopping early. If
+            `max_patience` is `None` but `val_size` is not `None`,
+            `max_patience` will be set to one-tenth the total number of
+            estimators to be trained.
+        threshold : Decrement by which the validation error must fall in
+            `max_patience` iterations to prevent early stopping. The validation
+            error is the RMS error of the model predictions, averaged over all
+            outputs if there are multiple.
+        verbose : Whether to log progress reports during fitting.
 
-        Other parameters are as in RandomForestRegressor.
+        Other parameters are as in `RandomForestRegressor`.
 
         """
 
@@ -114,10 +119,8 @@ class MultioutputBoostedForest(MultioutputForestMixin, ForestRegressor):
 
         Parameters
         ----------
-        X : np.ndarray of shape (n_samples, n_features)
-            The training inputs.
-        y np.ndarray of shape (n_samples,) or (n_samples, n_outputs)
-            The training targets.
+        X : Training inputs.
+        y : Training targets.
 
         Returns
         -------
@@ -205,13 +208,11 @@ class MultioutputBoostedForest(MultioutputForestMixin, ForestRegressor):
 
         Parameters
         ----------
-        X : np.ndarray of shape (n_samples, n_features)
-            The input features to make predictions for.
+        X : Input features to make predictions for.
 
         Returns
         -------
-        np.ndarray of shape (n_samples,) or (n_samples, n_outputs)
-            The regressor predictions.
+        output : Regressor predictions.
 
         """
         
@@ -232,7 +233,7 @@ class MultioutputRandomForest(MultioutputForestMixin, ForestRegressor):
         max_features: Optional[int | float]=None,
         random_state: Optional[int | np.random.RandomState]=None
     ) -> None:
-        """Initialize a random forest, as in RandomForestRegressor."""
+        """Initialize a random forest, as in `RandomForestRegressor`."""
 
         super().__init__(
             base_estimator=MultioutputDecisionTree(),
@@ -253,6 +254,11 @@ class MultioutputRandomForest(MultioutputForestMixin, ForestRegressor):
         self.max_features = max_features
 
     def fit(self, X: np.ndarray, y: np.ndarray, **_) -> MultioutputRandomForest:
-        """Fit the random forest, ignoring keyword arguments."""
+        """
+        Fit the random forest, ignoring keyword arguments.
+        
+        `X` and `y` are as in `RandomForestRegressor`.
+        
+        """
 
         return super().fit(X, y)
