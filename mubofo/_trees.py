@@ -102,14 +102,9 @@ class MultioutputDecisionTree(DecisionTreeRegressor):
 
         """
 
-        if not len(X):
-            impurities[node] = 0
-            return
-
-        else:
-            W = weights.sum()
-            mean = (weights * y).sum(axis=0) / W
-            impurities[node] = (weights * (y - mean) ** 2).sum(axis=0) / W
+        W = weights.sum()
+        mean = (weights * y).sum(axis=0) / W
+        impurities[node] = (weights * (y - mean) ** 2).sum(axis=0) / W
 
         left = self.tree_.children_left[node]
         right = self.tree_.children_right[node]
