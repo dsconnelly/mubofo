@@ -63,7 +63,7 @@ class MultioutputBoostedForest(MultioutputForestMixin, ForestRegressor):
         max_patience: Optional[int]=None,
         threshold: float=0,
         random_state: Optional[int | RandomState]=None,
-        verbose: bool=False
+        logging: bool=False
     ) -> None:
         """
         Initialize a `MultioutputBoostedForest` and set parameters.
@@ -85,7 +85,7 @@ class MultioutputBoostedForest(MultioutputForestMixin, ForestRegressor):
             `max_patience` iterations to prevent early stopping. The validation
             error is the RMS error of the model predictions, averaged over all
             outputs if there are multiple.
-        verbose : Whether to log progress reports during fitting.
+        logging : Whether to log progress reports during fitting.
 
         Other parameters are as in `RandomForestRegressor`.
 
@@ -104,7 +104,7 @@ class MultioutputBoostedForest(MultioutputForestMixin, ForestRegressor):
         )
 
         self.learning_rate = learning_rate
-        self.verbose = verbose
+        self.logging = logging
 
         self.max_depth = max_depth
         self.max_features = max_features
@@ -190,7 +190,7 @@ class MultioutputBoostedForest(MultioutputForestMixin, ForestRegressor):
                     estimators = estimators[:-max_patience]
                     message += '\nterminating early due to lack of improvement'
 
-            if self.verbose:
+            if self.logging:
                 logging.info(message)
 
             if len(estimators) < i:
