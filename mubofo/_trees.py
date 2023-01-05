@@ -47,8 +47,8 @@ class MultioutputDecisionTree(DecisionTreeRegressor):
 
         n_samples = self.tree_.weighted_n_node_samples
         impurities = np.zeros((len(n_samples), self.n_outputs_))
-        self._get_impurities(X, y, weights, impurities, 0)
-
+        self._get_impurities(X.astype(np.float64), y, weights, impurities, 0)
+  
         importances = np.zeros((X.shape[1], self.n_outputs_))
         for node in range(len(n_samples)):
             left = self.tree_.children_left[node]
@@ -102,9 +102,14 @@ class MultioutputDecisionTree(DecisionTreeRegressor):
 
         """
 
-        W = weights.sum()
-        mean = (weights * y).sum(axis=0) / W
-        impurities[node] = (weights * (y - mean) ** 2).sum(axis=0) / W
+        if not len(X):
+            impurities[node] = 0
+            return
+
+        else:
+            W = weights.sum()
+            mean = (weights * y).sum(axis=0) / W
+            impurities[node] = (weights * (y - mean) ** 2).sum(axis=0) / W
 
         left = self.tree_.children_left[node]
         right = self.tree_.children_right[node]
